@@ -1,3 +1,5 @@
+//Copyright @ primelee;
+//Source should be compiled on linux system.
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
