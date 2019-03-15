@@ -6,9 +6,8 @@
 #include <time.h>
 #include <sys/sem.h>
 #include <stdlib.h>
-#define NUM_LOOPS 5
+#define NUM_LOOPS 3
 char* m1[3] = {"tobacco","paper","glue"};
-char* m2[3] = {"paper","glue","tobacco"};
 void create_procs(int *);
 void delta(struct sembuf*,int,int,int);
 
@@ -49,7 +48,7 @@ int main(){
             }
             break;
         case 1: 
-            printf("\nSmoker1: My pid is %d\n",getpid()); sleep(1);
+            printf("\nSmoker2: My pid is %d\n",getpid()); sleep(1);
             for (i=0; i<NUM_LOOPS; i++) {
                 delta(&sem_op,0,sem_set_id,-1);
                 delta(&sem_op,2,sem_set_id,-1);
@@ -58,7 +57,7 @@ int main(){
             }
             break;
         case 2:
-            printf("\nSmoker1: My pid is %d\n",getpid()); sleep(1);
+            printf("\nSmoker3: My pid is %d\n",getpid()); sleep(1);
             for (i=0; i<NUM_LOOPS; i++) {
                 delta(&sem_op,0,sem_set_id,-1);
                 delta(&sem_op,1,sem_set_id,-1);
@@ -67,22 +66,24 @@ int main(){
             }
             break;
         case 3:
+            i = 0;
             printf("\nProducer1: My pid is %d\n",getpid()); sleep(1);
             while(i<NUM_LOOPS*3){
-                printf("\nProducer1: '%s' is ready\n", m1[i%3]);
                 fflush(stdout);
                 delta(&sem_op,i%3,sem_set_id,+1);
-                sleep(1);
+                printf("\nProducer1: '%s' is ready\n", m1[i%3]);
+                sleep(4);
                 i+=1;
 	        }
             break;
         case 4:
+            i = 0;
             printf("\nProducer2: My pid is %d\n",getpid()); sleep(1);
             while(i<NUM_LOOPS*3){
-                printf("\nProducer2: '%s' is ready\n", m2[i%3]);
                 fflush(stdout);
-                delta(&sem_op,i%3,sem_set_id,+1);
-                sleep(1);
+                delta(&sem_op,(i+1)%3,sem_set_id,+1);
+                printf("\nProducer2: '%s' is ready\n", m1[(i+1)%3]);
+                sleep(4);
                 i+=1;
 	        }
             break;
