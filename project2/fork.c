@@ -6,10 +6,12 @@
 #include <time.h>
 #include <sys/sem.h>
 #include <stdlib.h>
-#define NUM_LOOPS 3
+#define NUM_LOOPS 1
+#define ONE_SEC 999999999
 char* m1[3] = {"tobacco","paper","glue"};
 void create_procs(int *);
 void delta(struct sembuf*,int,int,int);
+void delay_time(int);
 
 union semun {
         int val;                    /* value for SETVAL */
@@ -31,7 +33,7 @@ int main(){
         perror("main: semget");
         return 0;
     }
-    for(int i = 0; i<3; i++) semctl(sem_set_id, 0, SETVAL, 0);
+    for(int i = 0; i<3; i++) semctl(sem_set_id, i, SETVAL, 0);
 
     //create procs;
     int id;
@@ -39,7 +41,7 @@ int main(){
     int i; //loop counter;
     switch(id){
         case 0:
-            printf("\nSmoker1: My pid is %d\n",getpid()); sleep(1);
+            printf("\nSmoker1: My pid is %d\n",getpid()); //sleep(1);
             for (i=0; i<NUM_LOOPS; i++) {
                 delta(&sem_op,1,sem_set_id,-1);
                 delta(&sem_op,2,sem_set_id,-1);
@@ -48,7 +50,7 @@ int main(){
             }
             break;
         case 1: 
-            printf("\nSmoker2: My pid is %d\n",getpid()); sleep(1);
+            printf("\nSmoker2: My pid is %d\n",getpid()); //sleep(1);
             for (i=0; i<NUM_LOOPS; i++) {
                 delta(&sem_op,0,sem_set_id,-1);
                 delta(&sem_op,2,sem_set_id,-1);
@@ -57,7 +59,7 @@ int main(){
             }
             break;
         case 2:
-            printf("\nSmoker3: My pid is %d\n",getpid()); sleep(1);
+            printf("\nSmoker3: My pid is %d\n",getpid()); //sleep(1);
             for (i=0; i<NUM_LOOPS; i++) {
                 delta(&sem_op,0,sem_set_id,-1);
                 delta(&sem_op,1,sem_set_id,-1);
@@ -69,10 +71,11 @@ int main(){
             i = 0;
             printf("\nProducer1: My pid is %d\n",getpid()); sleep(1);
             while(i<NUM_LOOPS*3){
+                printf("\nProducer1: '%s' is ready\n", m1[i%3]);
                 fflush(stdout);
                 delta(&sem_op,i%3,sem_set_id,+1);
-                printf("\nProducer1: '%s' is ready\n", m1[i%3]);
-                sleep(4);
+                //sleep(1);
+                delay_time(ONE_SEC/3);
                 i+=1;
 	        }
             break;
@@ -80,17 +83,20 @@ int main(){
             i = 0;
             printf("\nProducer2: My pid is %d\n",getpid()); sleep(1);
             while(i<NUM_LOOPS*3){
+                printf("\nProducer2: '%s' is ready\n", m1[(i+1)%3]);
                 fflush(stdout);
                 delta(&sem_op,(i+1)%3,sem_set_id,+1);
-                printf("\nProducer2: '%s' is ready\n", m1[(i+1)%3]);
-                sleep(4);
+                //sleep(1);
+                delay_time(ONE_SEC/3);
                 i+=1;
 	        }
+            printf("Done\n");
             break;
         default:
             return 0;
             break;
     }
+    
     return 0;
 }
 
@@ -110,4 +116,11 @@ void delta(struct sembuf* sem_op,int num,int sem_set_id,int increase){
     sem_op->sem_op = increase;
     sem_op->sem_flg = 0;
     semop(sem_set_id, sem_op, 1);
+}
+
+void delay_time(int nanosec){
+     struct timespec delay;
+     delay.tv_nsec = nanosec;
+     delay.tv_sec = 0;
+     nanosleep(&delay,NULL);
 }
