@@ -6,14 +6,14 @@
 #include <time.h>
 #include <sys/sem.h>
 #include <stdlib.h>
-#define NUM_LOOPS 1
+#define NUM_LOOPS 50
 #define ONE_SEC 999999999
 
 void create_procs(int *);
 void delta(struct sembuf*,int,int,int);
 void delay_time(int);
-void smoker(int,int,int);
-void producer(int,int);
+void smoker(int);
+void producer(int);
 
 int sem_set_id;
 struct sembuf sem_op;
@@ -34,11 +34,11 @@ int main(){
     create_procs(&id);
     //running;
     switch(id){
-        case 0: smoker(1,1,2);break;
-        case 1: smoker(2,0,2);break;
-        case 2: smoker(3,0,1);break;
-        case 3: producer(1,0);break;
-        case 4: producer(2,1);break;
+        case 0: smoker(1);break;
+        case 1: smoker(2);break;
+        case 2: smoker(3);break;
+        case 3: producer(1);break;
+        case 4: producer(2); printf("\nDone!!!\n");break;
         default: return 0;break;
     }
     return 0;
@@ -69,25 +69,25 @@ void delay_time(int nanosec){
      nanosleep(&delay,NULL);
 }
 
-void smoker(int id,int con1,int con2){
+void smoker(int id){
     printf("\nSmoker%d: My pid is %d\n",id,getpid()); //sleep(1);
     for (int i=0; i<NUM_LOOPS; i++) {
-        delta(&sem_op,con1,sem_set_id,-1);
-        delta(&sem_op,con2,sem_set_id,-1);
-        printf("\nSmoker%d: I get '%s' and '%s'. I can smoke!!!\n",id,m1[id%3],m1[(id+1)%3]);
+        delta(&sem_op,id%3,sem_set_id,-1);
+        delta(&sem_op,(id+1)%3,sem_set_id,-1);
+        printf("\nSmoker%d: I get '%s' and '%s'. I can smoke for the %d times!!!\n",id,m1[id%3],m1[(id+1)%3],i+1);
         fflush(stdout);
     }
 }
 
-void producer(int id,int de){
+void producer(int id){
     int i = 0;
     printf("\nProducer%d: My pid is %d\n",id,getpid()); sleep(1);
     while(i<NUM_LOOPS*3){
-        printf("\nProducer%d: '%s' is ready\n", id,m1[(i+de)%3]);
+        printf("\nProducer%d: '%s' is ready\n", id,m1[(i+id-1)%3]);
         fflush(stdout);
-        delta(&sem_op,(i+de)%3,sem_set_id,+1);
-        //sleep(1);
-        delay_time(ONE_SEC/1);
+        delta(&sem_op,(i+id-1)%3,sem_set_id,+1);
+        //sleep(2);
+        delay_time(ONE_SEC/9);
         i+=1;
     }
 }
