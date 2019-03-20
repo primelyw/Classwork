@@ -32,7 +32,7 @@ int main(){
         pre->nxt = cur->nxt;
         stuff* tmp = cur;
         free(tmp);
-        cur = cur->nxt;
+        cur = pre->nxt;
     }
     for(int i = 0; i<15; i++){
         printf("%d ",ans[i]);
